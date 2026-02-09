@@ -178,9 +178,26 @@ async function main() {
         const form = e.target;
         const data = new FormData(form);
         
-        // PLACEHOLDER: The user must replace this with their Formspree ID
-        // e.g. https://formspree.io/f/mqkvojza
-        const action = 'https://formspree.io/f/YOUR_FORM_ID_HERE'; 
+        // Use FormSubmit.co which is free and requires no setup other than confirming the email
+        // We use the email provided by the user: globalindesign@gmail.com
+        const action = 'https://formsubmit.co/globalindesign@gmail.com'; 
+        
+        // Add hidden configuration fields if they don't exist
+        if (!form.querySelector('input[name="_captcha"]')) {
+             const captcha = document.createElement('input');
+             captcha.type = 'hidden';
+             captcha.name = '_captcha';
+             captcha.value = 'false'; // Disable captcha for cleaner UX
+             form.appendChild(captcha);
+        }
+        
+        if (!form.querySelector('input[name="_subject"]')) {
+             const subject = document.createElement('input');
+             subject.type = 'hidden';
+             subject.name = '_subject';
+             subject.value = 'Nouveau message via Global Indesign Studio';
+             form.appendChild(subject);
+        }
         
         const btn = form.querySelector('[type="submit"], button:not([type="button"])');
         const originalText = btn ? btn.innerText : '';
