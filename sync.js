@@ -165,7 +165,61 @@ async function main() {
         }
     }
 
-    // 4. Save updated index.html
+    // 4. Inject Form Fixer Script
+    // This script intercepts form submissions and sends them to Formspree
+    // because GitHub Pages is static and cannot process backend forms.
+    const formFixerScript = `
+    <script>
+      document.addEventListener('submit', async function(e) {
+        // Only intercept if it's a POST request or default form behavior
+        // We assume any form submission on this static site intends to contact the owner.
+        e.preventDefault();
+        
+        const form = e.target;
+        const data = new FormData(form);
+        
+        // PLACEHOLDER: The user must replace this with their Formspree ID
+        // e.g. https://formspree.io/f/mqkvojza
+        const action = 'https://formspree.io/f/YOUR_FORM_ID_HERE'; 
+        
+        const btn = form.querySelector('[type="submit"], button:not([type="button"])');
+        const originalText = btn ? btn.innerText : '';
+        if(btn) {
+            btn.disabled = true;
+            btn.innerText = 'Envoi en cours...';
+        }
+
+        try {
+          const response = await fetch(action, {
+            method: 'POST',
+            body: data,
+            headers: {
+              'Accept': 'application/json'
+            }
+          });
+          if (response.ok) {
+            alert('Message envoyé avec succès !');
+            form.reset();
+          } else {
+            const json = await response.json();
+            alert('Erreur: ' + (json.errors ? json.errors.map(e => e.message).join(', ') : 'Erreur inconnue'));
+          }
+        } catch (error) {
+          alert('Erreur technique lors de l\\'envoi. Vérifiez que l\\'ID Formspree est correct.');
+          console.error('Form Error:', error);
+        } finally {
+            if(btn) {
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        }
+      }, true);
+    </script>
+    `;
+    $('body').append(formFixerScript);
+    console.log('Injected Form Fixer script');
+
+    // 5. Save updated index.html
     fs.writeFileSync(path.join(OUT_DIR, 'index.html'), $.html());
     console.log('Saved updated index.html');
 }
